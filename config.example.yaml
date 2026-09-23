@@ -1,0 +1,47 @@
+# Copy to config.yaml (git-ignored) and edit. Use your own team's emails.
+# Every value here is a placeholder.
+
+timezone: Asia/Kolkata          # any IANA timezone, e.g. Europe/London, America/New_York
+
+business_hours:                 # paging is OFF inside this window (Teams still gets every alert)
+  start: "10:00"
+  end: "18:30"
+  days: [MO, TU, WE, TH, FR]    # Saturday + Sunday are fully covered as after-hours
+
+# First date the rota applies from (a Monday is easiest to reason about)
+rotation_start_date: "2026-01-05"
+
+# Escalation tiers in order. Each tier gets its own after-hours schedule.
+# Emails must already exist as users in your Grafana stack.
+tiers:
+  - name: tier1
+    email: engineer1@example.com
+  - name: tier2
+    email: engineer2@example.com
+  - name: tier3
+    email: lead@example.com
+
+escalation:
+  first_wait_minutes: 6         # grace period: auto-resolving blips never page anyone
+  wait_between_tiers_minutes: 10
+  page_everyone_at_end: true    # final step notifies every tier at once
+
+# One escalation chain + one route per environment/project.
+# routing_regex is matched against the alert payload (Jinja2 template also possible).
+environments:
+  - name: prod-app-a
+    routing_regex: '(?i)app-a'
+  - name: prod-app-b
+    routing_regex: '(?i)app-b'
+
+# Integrations to create. Types: alertmanager, amazon_sns, webhook, grafana_alerting, zabbix
+integrations:
+  - name: Prometheus-Alertmanager
+    type: alertmanager
+  - name: AWS-CloudWatch
+    type: amazon_sns
+  - name: Zabbix
+    type: webhook
+
+teams:
+  enabled: true                 # posts FIRING/RESOLVED cards to Teams 24x7 (URL comes from .env)

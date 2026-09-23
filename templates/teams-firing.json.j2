@@ -1,0 +1,24 @@
+{
+  "type": "message",
+  "attachments": [{
+    "contentType": "application/vnd.microsoft.card.adaptive",
+    "content": {
+      "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+      "type": "AdaptiveCard",
+      "version": "1.4",
+      "body": [
+        { "type": "TextBlock", "size": "Large", "weight": "Bolder", "color": "Attention",
+          "text": {{ ("FIRING: " ~ alert_group.title) | tojson }}, "wrap": true },
+        { "type": "FactSet", "facts": [
+          { "title": "Source", "value": {{ integration.name | tojson }} },
+          { "title": "State", "value": {{ alert_group.state | tojson }} },
+          { "title": "Started", "value": {{ (alert_group.created_at or "") | tojson }} }
+        ]}
+      ],
+      "actions": [
+        { "type": "Action.OpenUrl", "title": "Open in Grafana IRM",
+          "url": {{ alert_group.permalinks.web | tojson }} }
+      ]
+    }
+  }]
+}

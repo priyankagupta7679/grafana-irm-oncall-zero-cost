@@ -1,0 +1,41 @@
+# Prometheus Alertmanager -> Grafana IRM
+# Only critical alerts are sent to IRM; everything else is dropped here.
+# Business-hours logic lives in Grafana IRM schedules, NOT here, so Teams
+# still receives every critical alert 24x7.
+
+route:
+  receiver: blackhole
+  group_by: [alertname, project]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - receiver: grafana-irm
+      matchers:
+        - severity="critical"
+      continue: false
+
+receivers:
+  - name: blackhole          # intentionally empty: drops non-critical alerts
+
+  - name: grafana-irm
+    webhook_configs:
+      # Paste the Alertmanager integration URL printed by bootstrap_oncall.py.
+      # Alertmanager does NOT expand env vars itself. Render this file first, e.g.
+      #   envsubst < alertmanager.yml > /etc/alertmanager/alertmanager.yml
+      # so the real URL never lives in git.
+      - url: "${GRAFANA_IRM_ALERTMANAGER_URL}"
+        send_resolved: true
+        max_alerts: 100
+
+# Optional, belt-and-braces: mute at the source during business hours.
+# WARNING: this also mutes Teams, because nothing reaches IRM at all.
+# Prefer the IRM schedule approach unless you really want silence.
+#
+# time_intervals:
+#   - name: business_hours
+#     time_intervals:
+#       - weekdays: ["monday:friday"]
+#         times: [{ start_time: "10:00", end_time: "18:30" }]
+#         location: "Asia/Kolkata"
+# ...and add `mute_time_intervals: [business_hours]` to the grafana-irm route.
